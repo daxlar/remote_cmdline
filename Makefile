@@ -1,105 +1,163 @@
-PROJECT := remote
+PROJECT_NAME     := remote
+TARGETS          := nrf52840_xxaa
+OUTPUT_DIRECTORY := _build
 
-MDK_PATH := $(HOME)/Documents/nRF_MDK_8_38_0_GCC_NordicLicense
-SDK_PATH := $(HOME)/Documents/DeviceDownload/nRF5_SDK_17.0.2_d674dde
-#Softdevice path
-SDV_PATH := $(HOME)/Documents/DeviceDownload/s140nrf52720
+SDK_ROOT := $(HOME)/Documents/DeviceDownload/nRF5_SDK_17.0.2_d674dde
+PROJ_DIR := $(HOME)/projects/remote
+
+$(OUTPUT_DIRECTORY)/nrf52840_xxaa.out: \
+  LINKER_SCRIPT  := nrf52840_xxaa.ld
+
+# Source files common to all targets
+SRC_FILES += \
+  $(SDK_ROOT)/modules/nrfx/mdk/gcc_startup_nrf52840.S \
+  $(SDK_ROOT)/components/libraries/util/app_util_platform.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/prs/nrfx_prs.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uarte.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_saadc.c \
+  $(PROJ_DIR)/main.c \
+  $(SDK_ROOT)/modules/nrfx/mdk/system_nrf52840.c \
+  #$(SDK_ROOT)/components/libraries/log/src/nrf_log_frontend.c \
+  $(SDK_ROOT)/components/libraries/log/src/nrf_log_str_formatter.c \
+  $(SDK_ROOT)/components/boards/boards.c \
+  $(SDK_ROOT)/components/libraries/util/app_error.c \
+  $(SDK_ROOT)/components/libraries/util/app_error_handler_gcc.c \
+  $(SDK_ROOT)/components/libraries/util/app_error_weak.c \
+  $(SDK_ROOT)/components/libraries/fifo/app_fifo.c \
+  $(SDK_ROOT)/components/libraries/uart/app_uart_fifo.c \
+  $(SDK_ROOT)/components/libraries/util/app_util_platform.c \
+  $(SDK_ROOT)/external/fprintf/nrf_fprintf.c \
+  $(SDK_ROOT)/external/fprintf/nrf_fprintf_format.c \
+  $(SDK_ROOT)/components/libraries/memobj/nrf_memobj.c \
+  $(SDK_ROOT)/components/libraries/uart/retarget.c \
+  $(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_uart.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_uart.c \
+  $(SDK_ROOT)/components/libraries/util/nrf_assert.c \
+  $(SDK_ROOT)/components/libraries/balloc/nrf_balloc.c \
+  $(SDK_ROOT)/components/libraries/ringbuf/nrf_ringbuf.c \
+  $(SDK_ROOT)/components/libraries/atomic/nrf_atomic.c \
+  $(SDK_ROOT)/components/libraries/strerror/nrf_strerror.c \
+  $(SDK_ROOT)/modules/nrfx/soc/nrfx_atomic.c \
+
+# Include folders common to all targets
+INC_FOLDERS += \
+  $(SDK_ROOT)/components \
+  $(SDK_ROOT)/modules/nrfx/mdk \
+  $(PROJ_DIR) \
+  $(SDK_ROOT)/components/toolchain/cmsis/include \
+  $(SDK_ROOT)/components/libraries/util \
+  config \
+  $(SDK_ROOT)/modules/nrfx/hal \
+  $(SDK_ROOT)/components/libraries/log \
+  $(SDK_ROOT)/modules/nrfx \
+  $(SDK_ROOT)/components/libraries/experimental_section_vars \
+  $(SDK_ROOT)/integration/nrfx \
+  $(SDK_ROOT)/components/drivers_nrf/nrf_soc_nosd \
+  $(SDK_ROOT)/modules/nrfx/drivers/include \
+  $(SDK_ROOT)/components/libraries/log/src \
+  #$(SDK_ROOT)/components/libraries/balloc \
+  $(SDK_ROOT)/components/libraries/ringbuf \
+   $(SDK_ROOT)/external/fprintf \
+  $(SDK_ROOT)/components/libraries/log/src \
+  $(SDK_ROOT)/components/libraries/fifo \
+  $(SDK_ROOT)/components/libraries/strerror \
+   $(SDK_ROOT)/components/libraries/atomic \
+  $(SDK_ROOT)/components/boards \
+  $(SDK_ROOT)/components/libraries/memobj \
+    $(SDK_ROOT)/integration/nrfx/legacy \
+  $(SDK_ROOT)/components/libraries/delay \
+    $(SDK_ROOT)/components/libraries/bsp \
+  $(SDK_ROOT)/components/libraries/uart \
+  $(SDK_ROOT)/external/fprintf \
+  $(SDK_ROOT)/components \
+
+# Libraries common to all targets
+LIB_FILES += \
+
+# Optimization flags
+OPT = -O3 -g3
+# Uncomment the line below to enable link time optimization
+#OPT += -flto
+
+# C flags common to all targets
+CFLAGS += $(OPT)
+CFLAGS += -DBOARD_PCA10056
+CFLAGS += -DBSP_DEFINES_ONLY
+CFLAGS += -DCONFIG_GPIO_AS_PINRESET
+CFLAGS += -DFLOAT_ABI_HARD
+CFLAGS += -DNRF52840_XXAA
+CFLAGS += -mcpu=cortex-m4
+CFLAGS += -mthumb -mabi=aapcs
+CFLAGS += -Wall -Werror
+CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
+# keep every function in a separate section, this allows linker to discard unused ones
+CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
+CFLAGS += -fno-builtin -fshort-enums
+
+# C++ flags common to all targets
+CXXFLAGS += $(OPT)
+# Assembler flags common to all targets
+ASMFLAGS += -g3
+ASMFLAGS += -mcpu=cortex-m4
+ASMFLAGS += -mthumb -mabi=aapcs
+ASMFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
+ASMFLAGS += -DBOARD_PCA10056
+ASMFLAGS += -DBSP_DEFINES_ONLY
+ASMFLAGS += -DCONFIG_GPIO_AS_PINRESET
+ASMFLAGS += -DFLOAT_ABI_HARD
+ASMFLAGS += -DNRF52840_XXAA
+
+# Linker flags
+LDFLAGS += $(OPT)
+LDFLAGS += -mthumb -mabi=aapcs -L$(SDK_ROOT)/modules/nrfx/mdk -T$(LINKER_SCRIPT)
+LDFLAGS += -mcpu=cortex-m4
+LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
+# let linker dump unused sections
+LDFLAGS += -Wl,--gc-sections
+# use newlib in nano version
+LDFLAGS += --specs=nano.specs
+
+nrf52840_xxaa: CFLAGS += -D__HEAP_SIZE=8192
+nrf52840_xxaa: CFLAGS += -D__STACK_SIZE=8192
+nrf52840_xxaa: ASMFLAGS += -D__HEAP_SIZE=8192
+nrf52840_xxaa: ASMFLAGS += -D__STACK_SIZE=8192
+
+# Add standard libraries at the very end of the linker input, after all objects
+# that may need symbols provided by these libraries.
+LIB_FILES += -lc -lnosys -lm
 
 
-ASMS += \
-		$(MDK_PATH)/gcc_startup_nrf52840.S 
+.PHONY: default help
 
-SRCS += \
-		$(MDK_PATH)/system_nrf52840.c \
-		$(SDK_PATH)/modules/nrfx/drivers/src/nrfx_gpiote.c \
-		main.c 
+# Default target - first one defined
+default: nrf52840_xxaa
 
-INCS += \
-		$(MDK_PATH) \
-		$(SDK_PATH)/components/toolchain/cmsis/include \
-		$(SDK_PATH)/modules/nrfx/ \
-		$(SDK_PATH)/modules/nrfx/templates \
-		$(SDK_PATH)/modules/nrfx/templates/nrf52840 \
-		$(SDK_PATH)/modules/nrfx/hal \
-		$(SDK_PATH)/modules/nrfx/drivers/include
+# Print all targets that can be built
+help:
+	@echo following targets are available:
+	@echo		nrf52840_xxaa
+	@echo		sdk_config - starting external tool for editing sdk_config.h
+	@echo		flash      - flashing binary
+
+TEMPLATE_PATH := $(SDK_ROOT)/components/toolchain/gcc
 
 
+include $(TEMPLATE_PATH)/Makefile.common
 
+$(foreach target, $(TARGETS), $(call define_target, $(target)))
 
-CFLAGS += -DNRF52840_XXAA \
-		  -mcpu=cortex-m4 \
-		  -mthumb \
-		  -mabi=aapcs \
-	      -Wall \
-		  -Werror \
-		  -O0 \
-		  -g \
-	      -mfloat-abi=hard \
-		  -mfpu=fpv4-sp-d16 \
-		  -ffunction-sections \
-		  -fdata-sections \
-		  -fno-strict-aliasing \
-	      -fno-builtin \
-		  -fshort-enums 
+.PHONY: flash erase
 
-LDFLAGS += -Wl,--gc-sections \
-		   --specs=nano.specs \
-		   -T nrf52840_xxaa.ld
-
-CFLAGS += $(foreach i,$(INCS),-I$(i))
-
-CC=arm-none-eabi-gcc
-OCPY=arm-none-eabi-objcopy
-MKDIR=mkdir
-BUILD_DIR := $(CURDIR)/build
-OBJ_DIR = $(BUILD_DIR)/
-no_echo := @
-
-
-#OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(SRCS))
-#OBJS += $(patsubst %.S,$(OBJ_DIR)/%.o,$(SRCS))
-
-OBJS = $(filter $(OBJ_DIR)/%.o,$(patsubst %.S,$(OBJ_DIR)/%.o,$(ASMS)) \
-       $(patsubst %.c,$(OBJ_DIR)/%.o,$(SRCS)))
- 
-       
-
-
-#hello:
-#	echo "hello world"
-
-
-#test.elf: main.c
-#	$(no_echo)arm-none-eabi-gcc main.c 
-.PHONY: all clean 
-all: flash
-
-$(BUILD_DIR):
-	$(MKDIR) -p $(BUILD_DIR)
-
-$(OBJ_DIR):
-	$(MKDIR) -p $(OBJ_DIR)
-
-$(OBJ_DIR)/%.o: %.c $(OBJ_DIR)
-	@echo "Compiling $<"
-	$(NO_ECHO)$(MKDIR) -p $(dir $@)
-	$(NO_ECHO)$(CC) -c -o $@ $< $(CFLAGS)
-
-$(OBJ_DIR)/%.o: %.S $(OBJ_DIR)
-	@echo "Compiling $<"
-	$(NO_ECHO)$(MKDIR) -p $(dir $@)
-	$(NO_ECHO)$(CC) -c -o $@ $< $(CFLAGS)
-
-$(BUILD_DIR)/$(PROJECT).elf: $(OBJS)
-	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
-
-$(BUILD_DIR)/$(PROJECT).bin: $(BUILD_DIR)/$(PROJECT).elf
-	$(OCPY) $< $@ -O binary
-
-flash: $(BUILD_DIR)/$(PROJECT).bin
-	nrfjprog -f NRF52 --eraseall
-	nrfjprog -f NRF52 --program $< --chiperase
+# Flash the program
+flash: default
+	@echo Flashing: $(OUTPUT_DIRECTORY)/nrf52840_xxaa.hex
+	nrfjprog -f nrf52 --program $(OUTPUT_DIRECTORY)/nrf52840_xxaa.hex --sectorerase
 	nrfjprog -f nrf52 --reset
 
-clean:
-	rm -rf $(BUILD_DIR)
+erase:
+	nrfjprog -f nrf52 --eraseall
+
+SDK_CONFIG_FILE := config/sdk_config.h
+CMSIS_CONFIG_TOOL := $(SDK_ROOT)/external_tools/cmsisconfig/CMSIS_Configuration_Wizard.jar
+sdk_config:
+	java -jar $(CMSIS_CONFIG_TOOL) $(SDK_CONFIG_FILE)
